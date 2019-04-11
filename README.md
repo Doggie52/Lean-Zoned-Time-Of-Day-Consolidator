@@ -9,7 +9,7 @@ Precise bar consolidation is important in many aspects of trading, in particular
 Usage:
 
  * Set your data resolution to at least `Resolution.Hour`. If your time of day has a minute-component, you will need `Resolution.Minute`. Same if your time of day has a second-component (`Resolution.Second`).
- * Example: consolidate bars at 3AM London time every day:
+ * Example: Consolidate bars at 3AM London time every day:
 ```c#
 MyConsolidator = new ZonedTimeOfDayQuoteBarConsolidator(
 	dailyCloseTime: TimeSpan.FromHours( 3 ),
