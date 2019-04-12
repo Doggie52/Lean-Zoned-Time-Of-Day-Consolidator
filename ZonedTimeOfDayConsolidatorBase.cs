@@ -2,8 +2,6 @@
 
 using NodaTime;
 
-using QuantConnect.Data;
-using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data.Consolidators
