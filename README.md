@@ -1,6 +1,6 @@
-# Lean Zoned Time Of Day Consolidator
+# LEAN Zoned Time Of Day Consolidator
 
-*Lean Zoned Time Of Day Consolidator* is an unofficial, alternative consolidator for [QuantConnect's Lean Engine](https://github.com/quantconnect/lean) that consolidates bars *once a day* at a *specific time of day* in a *given timezone*.
+*LEAN Zoned Time Of Day Consolidator* is an unofficial, alternative consolidator for [QuantConnect's LEAN Engine](https://github.com/quantconnect/lean) that consolidates bars *once a day* at a *specific time of day* in a *given timezone*.
 
 Precise bar consolidation is important in many aspects of trading, in particular in Forex and Commodity markets that tend to trade throughout the day in different timezones.
 
@@ -17,3 +17,7 @@ MyConsolidator = new ZonedTimeOfDayQuoteBarConsolidator(
 	exchangeTimeZone: security.Exchange.TimeZone.ToString()
 );
 ```
+
+## Acknowledgments
+
+ * [Tony Shacklock](https://www.quantconnect.com/u/tony_shacklock) for his work on a [non-timezoned consolidator](https://www.quantconnect.com/forum/discussion/5244/daily-quotebar-consolidator-with-different-close-time/p1/comment-15294)
