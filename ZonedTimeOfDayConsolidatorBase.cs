@@ -33,11 +33,6 @@ namespace QuantConnect.Data.Consolidators
 		protected readonly DateTimeZone ExchangeTimeZone;
 
 		/// <summary>
-		/// Get the timezone in which the security's data is specified.
-		/// </summary>
-		protected readonly DateTimeZone DataTimeZone;
-
-		/// <summary>
 		/// Get or set the working bar used for aggregating the data.
 		/// </summary>
 		private TConsolidated _workingBar;
@@ -55,8 +50,7 @@ namespace QuantConnect.Data.Consolidators
 		/// <param name="dailyCloseTime">The time of day (in desired timezone) to emit/close a consolidated bar.</param>
 		/// <param name="closeTimeZone">The desired timezone string in which to specify the close time.</param>
 		/// <param name="exchangeTimeZone">The exchange timezone string of the security.</param>
-		/// <param name="dataTimeZone">The data timezone string of the security.</param>
-		protected ZonedTimeOfDayConsolidatorBase( TimeSpan dailyCloseTime, string closeTimeZone, string exchangeTimeZone, string dataTimeZone )
+		protected ZonedTimeOfDayConsolidatorBase( TimeSpan dailyCloseTime, string closeTimeZone, string exchangeTimeZone )
 		{
 
 			// Create the time of day as a LocalTime (we can't assign it a timezone yet because DST would make this ambiguous)
@@ -65,7 +59,6 @@ namespace QuantConnect.Data.Consolidators
 			// Save the timezones down
 			CloseTimeZone = DateTimeZoneProviders.Tzdb[closeTimeZone];
 			ExchangeTimeZone = DateTimeZoneProviders.Tzdb[exchangeTimeZone];
-			DataTimeZone = DateTimeZoneProviders.Tzdb[dataTimeZone];
 
 			_lastEmit = DateTime.MinValue;
 		}

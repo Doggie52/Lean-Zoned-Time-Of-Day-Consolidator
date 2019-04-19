@@ -16,18 +16,17 @@ namespace QuantConnect.Data.Consolidators
 		/// <param name="dailyCloseTime">The time of day (in desired timezone) to emit/close a consolidated bar.</param>
 		/// <param name="closeTimeZone">The desired timezone string in which to specify the close time.</param>
 		/// <param name="exchangeTimeZone">The exchange timezone string of the security.</param>
-		/// <param name="dataTimeZone">The data timezone string of the security.</param>
-		public ZonedTimeOfDayQuoteBarConsolidator( TimeSpan dailyCloseTime, string closeTimeZone = "UTC", string exchangeTimeZone = "America/New_York", string dataTimeZone = "UTC" )
-			: base( dailyCloseTime, closeTimeZone, exchangeTimeZone, dataTimeZone )
+		public ZonedTimeOfDayQuoteBarConsolidator( TimeSpan dailyCloseTime, string closeTimeZone = "UTC", string exchangeTimeZone = "America/New_York" )
+			: base( dailyCloseTime, closeTimeZone, exchangeTimeZone )
 		{
 		}
 
 		/// <summary>
 		/// Aggregates the new 'data' into the 'workingBar'. The 'workingBar' will be
-		/// null following the event firing
+		/// null following the event firing.
 		/// </summary>
-		/// <param name="workingBar">The bar we're building, null if the event was just fired and we're starting a new consolidated bar</param>
-		/// <param name="data">The new data</param>
+		/// <param name="workingBar">The bar we're building, null if the event was just fired and we're starting a new consolidated bar.</param>
+		/// <param name="data">The new data.</param>
 		protected override void AggregateBar( ref QuoteBar workingBar, QuoteBar data )
 		{
 			var bid = data.Bid;
@@ -35,8 +34,8 @@ namespace QuantConnect.Data.Consolidators
 
 			if ( workingBar == null ) {
 
-				// Data is in data TZ, let's zone it
-				var zonedDataTimeDT = DataTimeZone.AtLeniently( CreateLocalDateTime( data.Time ) );
+				// Data is in exchange TZ, let's zone it
+				var zonedDataTimeDT = ExchangeTimeZone.AtLeniently( CreateLocalDateTime( data.Time ) );
 
 				workingBar = new QuoteBar
 				{
