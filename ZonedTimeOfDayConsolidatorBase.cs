@@ -100,7 +100,7 @@ namespace QuantConnect.Data.Consolidators
 
 				// The next bar's starting time must be newer than that of the last bar we made and time of day must be right
 				if ( GetRoundedBarTime( zonedDataTimeDT ).CompareTo( zonedWorkingBarTimeDT ) > 0 &&
-					GetRoundedBarTime( zonedDataTimeDT ).CompareTo( zonedDataTimeDT ) == 0 ) {
+					AreAlmostSame( GetRoundedBarTime( zonedDataTimeDT ), zonedDataTimeDT ) ) {
 
 					// Set the EndTime accordingly
 					var workingTradeBar = _workingBar as QuoteBar;
@@ -145,7 +145,7 @@ namespace QuantConnect.Data.Consolidators
 
 				// If we should have emitted by now and the time of day is right for doing so
 				if ( shouldHaveEmittedAt.CompareTo( zonedWorkingBarTimeDT ) > 0 &&
-					shouldHaveEmittedAt.CompareTo( zonedCurrentLocalTimeDT ) == 0 ) {
+					AreAlmostSame( shouldHaveEmittedAt, zonedCurrentLocalTimeDT ) ) {
 
 					// Update the EndTime of the working tradebar
 					var workingTradeBar = _workingBar as QuoteBar;
@@ -209,6 +209,22 @@ namespace QuantConnect.Data.Consolidators
 		protected LocalDateTime CreateLocalDateTime( DateTime inp )
 		{
 			return new LocalDateTime( inp.Year, inp.Month, inp.Day, inp.Hour, inp.Minute, inp.Second, inp.Millisecond );
+		}
+
+		/// <summary>
+		/// Checks whether two zoned datetimes are roughly the same (i.e. within [60 seconds] of each other).
+		/// </summary>
+		/// <param name="zdt1">First zoned datetime to compare.</param>
+		/// <param name="zdt2">Second zoned datetime to compare.</param>
+		/// <returns>A boolean indicating whether the two zoned datetimes are roughly the same.</returns>
+		protected bool AreAlmostSame( ZonedDateTime zdt1, ZonedDateTime zdt2 )
+		{
+			int seconds = 60;
+
+			// Convert to ticks (10,000 ticks in a millisecond)
+			int ticks = seconds * (int)1e3 * (int)1e4;
+
+			return Math.Abs( zdt1.ToInstant().Ticks - zdt2.ToInstant().Ticks ) <= ticks;
 		}
 	}
 }
