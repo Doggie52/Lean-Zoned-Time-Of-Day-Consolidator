@@ -19,7 +19,7 @@ namespace QuantConnect.Data.Consolidators
 		/// <summary>
 		/// Get the time of day to emit/close a consolidated bar.
 		/// </summary>
-		/// <remarks>TZ: specified in <see cref="CloseTimeZone"/>.</remarks>
+		/// <remarks>TZ: <see cref="CloseTimeZone"/>.</remarks>
 		protected readonly LocalTime DailyCloseTime;
 
 		/// <summary>
@@ -40,7 +40,7 @@ namespace QuantConnect.Data.Consolidators
 		/// <summary>
 		/// Get or set the last time we emitted a consolidated bar.
 		/// </summary>
-		/// <remarks>TZ: security's LocalTime (for Oanda FX: America/New_York).</remarks>
+		/// <remarks>TZ: <see cref="ExchangeTimeZone"/>.</remarks>
 		private DateTime _lastEmit;
 
 		/// <summary>
@@ -99,12 +99,12 @@ namespace QuantConnect.Data.Consolidators
 				var zonedWorkingBarTimeDT = ExchangeTimeZone.AtLeniently( CreateLocalDateTime( _workingBar.Time ) );
 
 				// The next bar's starting time must be newer than that of the last bar we made and time of day must be right
-				if ( GetRoundedBarTime( zonedDataTimeDT ).CompareTo( zonedWorkingBarTimeDT ) > 0 &&
-					AreAlmostSame( GetRoundedBarTime( zonedDataTimeDT ), zonedDataTimeDT ) ) {
+				if ( InexactCompareTo( RoundDownToLastEmitTime( zonedDataTimeDT ), zonedWorkingBarTimeDT ) > 0 &&
+					InexactCompareTo( RoundDownToLastEmitTime( zonedDataTimeDT ), zonedDataTimeDT ) == 0 ) {
 
 					// Set the EndTime accordingly
 					var workingTradeBar = _workingBar as QuoteBar;
-					workingTradeBar.EndTime = GetRoundedBarTime( zonedDataTimeDT ).WithZone( ExchangeTimeZone ).ToDateTimeUnspecified();
+					workingTradeBar.EndTime = RoundDownToLastEmitTime( zonedDataTimeDT ).WithZone( ExchangeTimeZone ).ToDateTimeUnspecified();
 
 					// Fire consolidation event
 					OnDataConsolidated( _workingBar );
@@ -127,7 +127,7 @@ namespace QuantConnect.Data.Consolidators
 		/// <summary>
 		/// Scans this consolidator to see if it should emit a bar due to time passing.
 		/// </summary>
-		/// <param name="currentLocalTime">The current time in the exchange time zone.</param>
+		/// <param name="currentLocalTime">The current time (TZ: <see cref="ExchangeTimeZone"/>).</param>
 		public override void Scan( DateTime currentLocalTime )
 		{
 
@@ -138,14 +138,14 @@ namespace QuantConnect.Data.Consolidators
 				var zonedCurrentLocalTimeDT = ExchangeTimeZone.AtLeniently( CreateLocalDateTime( currentLocalTime ) );
 
 				// Get the latest time the bar should have been emitted
-				var shouldHaveEmittedAt = GetRoundedBarTime( zonedCurrentLocalTimeDT );
+				var shouldHaveEmittedAt = RoundDownToLastEmitTime( zonedCurrentLocalTimeDT );
 
 				// Working bar time is in [exchange] TZ, let's zone it
 				var zonedWorkingBarTimeDT = ExchangeTimeZone.AtLeniently( CreateLocalDateTime( _workingBar.Time ) );
 
 				// If we should have emitted by now and the time of day is right for doing so
-				if ( shouldHaveEmittedAt.CompareTo( zonedWorkingBarTimeDT ) > 0 &&
-					AreAlmostSame( shouldHaveEmittedAt, zonedCurrentLocalTimeDT ) ) {
+				if ( InexactCompareTo( shouldHaveEmittedAt, zonedWorkingBarTimeDT ) > 0 &&
+					InexactCompareTo( shouldHaveEmittedAt, zonedCurrentLocalTimeDT ) == 0 ) {
 
 					// Update the EndTime of the working tradebar
 					var workingTradeBar = _workingBar as QuoteBar;
@@ -175,8 +175,8 @@ namespace QuantConnect.Data.Consolidators
 		/// In effect get the latest time a bar should have been emitted. Needs the input to be timezoned.
 		/// </summary>
 		/// <param name="zonedBarTime">The bar time to be rounded down (in a zoned datetime).</param>
-		/// <returns>The rounded and zoned bar time (in the same TZ as the daily close time).</returns>
-		protected ZonedDateTime GetRoundedBarTime( ZonedDateTime zonedBarTime )
+		/// <returns>The rounded down and zoned bar time (TZ: <see cref="CloseTimeZone"/>).</returns>
+		protected ZonedDateTime RoundDownToLastEmitTime( ZonedDateTime zonedBarTime )
 		{
 
 			// Convert time given to the same timezone as the close specified if it isn't already
@@ -212,19 +212,24 @@ namespace QuantConnect.Data.Consolidators
 		}
 
 		/// <summary>
-		/// Checks whether two zoned datetimes are roughly the same (i.e. within [60 seconds] of each other).
+		/// Checks whether two zoned datetimes are roughly the same (i.e. within some number of
+		/// seconds of each other) or greater/smaller.
 		/// </summary>
 		/// <param name="zdt1">First zoned datetime to compare.</param>
 		/// <param name="zdt2">Second zoned datetime to compare.</param>
-		/// <returns>A boolean indicating whether the two zoned datetimes are roughly the same.</returns>
-		protected bool AreAlmostSame( ZonedDateTime zdt1, ZonedDateTime zdt2 )
+		/// <returns>1: zdt1 > zdt2, -1: zdt1 < zdt2, 0: roughly the same</returns>
+		protected int InexactCompareTo( ZonedDateTime zdt1, ZonedDateTime zdt2 )
 		{
-			int seconds = 60;
+			int seconds = 30;
 
 			// Convert to ticks (10,000 ticks in a millisecond)
 			int ticks = seconds * (int)1e3 * (int)1e4;
 
-			return Math.Abs( zdt1.ToInstant().Ticks - zdt2.ToInstant().Ticks ) <= ticks;
+			// Roughly the same
+			if ( Math.Abs( zdt1.ToInstant().Ticks - zdt2.ToInstant().Ticks ) <= ticks )
+				return 0;
+			else
+				return zdt1.ToInstant().Ticks > zdt2.ToInstant().Ticks ? 1 : -1;
 		}
 	}
 }
