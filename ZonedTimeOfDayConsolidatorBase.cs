@@ -95,18 +95,18 @@ namespace QuantConnect.Data.Consolidators
 			if ( _workingBar != null ) {
 
 				// Data and working bar are in exchange TZ, let's zone them
-				var zonedDataTimeDT = ExchangeTimeZone.AtLeniently( CreateLocalDateTime( data.Time ) );
+				var zonedDataEndTimeDT = ExchangeTimeZone.AtLeniently( CreateLocalDateTime( data.EndTime ) );
 				var zonedWorkingBarTimeDT = ExchangeTimeZone.AtLeniently( CreateLocalDateTime( _workingBar.Time ) );
 
-				// The last time we should have emitted at, with respect to the incoming data
-				var shouldHaveEmittedAt = RoundDownToLastEmitTime( zonedDataTimeDT );
+				// The last time we should have emitted at, with respect to the end of the incoming data
+				var shouldHaveEmittedAt = RoundDownToLastEmitTime( zonedDataEndTimeDT );
 
 				/// We consolidate if the following condition(s) are met:
-				///		1. Incoming bar's start time (<see cref="ZonedDateTime"/>) is same as the
+				///		1. Incoming bar's end time (<see cref="ZonedDateTime"/>) is same as the
 				///		time we should have emitted at.
 				///		2. The time we should have emitted at is after the current working bar's
 				///		start time.
-				if ( InexactCompareTo( zonedDataTimeDT, shouldHaveEmittedAt ) == 0 &&
+				if ( InexactCompareTo( zonedDataEndTimeDT, shouldHaveEmittedAt ) == 0 &&
 					InexactCompareTo( shouldHaveEmittedAt, zonedWorkingBarTimeDT ) > 0 ) {
 
 					// Set the EndTime accordingly
