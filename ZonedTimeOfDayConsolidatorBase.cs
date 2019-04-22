@@ -92,41 +92,38 @@ namespace QuantConnect.Data.Consolidators
 		public override void Update( T data )
 		{
 
-			if ( _workingBar != null ) {
-
-				// Data and working bar are in exchange TZ, let's zone them
-				var zonedDataEndTimeDT = ExchangeTimeZone.AtLeniently( CreateLocalDateTime( data.EndTime ) );
-				var zonedWorkingBarTimeDT = ExchangeTimeZone.AtLeniently( CreateLocalDateTime( _workingBar.Time ) );
-
-				// The last time we should have emitted at, with respect to the end of the incoming data
-				var shouldHaveEmittedAt = RoundDownToLastEmitTime( zonedDataEndTimeDT );
-
-				/// We consolidate if the following condition(s) are met:
-				///		1. Incoming bar's end time (<see cref="ZonedDateTime"/>) is same as the
-				///		time we should have emitted at.
-				///		2. The time we should have emitted at is after the current working bar's
-				///		start time.
-				if ( InexactCompareTo( zonedDataEndTimeDT, shouldHaveEmittedAt ) == 0 &&
-					InexactCompareTo( shouldHaveEmittedAt, zonedWorkingBarTimeDT ) > 0 ) {
-
-					// Set the EndTime accordingly
-					var workingTradeBar = _workingBar as QuoteBar;
-					workingTradeBar.EndTime = shouldHaveEmittedAt.WithZone( ExchangeTimeZone ).ToDateTimeUnspecified();
-
-					// Fire consolidation event
-					OnDataConsolidated( _workingBar );
-
-					// Last emission was when this bar ended
-					_lastEmit = _workingBar.EndTime;
-
-					// Reset the working bar
-					_workingBar = null;
-				}
-			}
-
 			// If we have new data, aggregate it onto the working bar
 			if ( data.Time >= _lastEmit ) {
 				AggregateBar( ref _workingBar, data );
+			}
+
+			// Data and working bar are in exchange TZ, let's zone them
+			var zonedDataEndTimeDT = ExchangeTimeZone.AtLeniently( CreateLocalDateTime( data.EndTime ) );
+			var zonedWorkingBarTimeDT = ExchangeTimeZone.AtLeniently( CreateLocalDateTime( _workingBar.Time ) );
+
+			// The last time we should have emitted at, with respect to the end of the incoming data
+			var shouldHaveEmittedAt = RoundDownToLastEmitTime( zonedDataEndTimeDT );
+
+			/// We consolidate if the following condition(s) are met:
+			///		1. Incoming bar's end time (<see cref="ZonedDateTime"/>) is same as the
+			///		time we should have emitted at.
+			///		2. The time we should have emitted at is after the current working bar's
+			///		start time.
+			if ( InexactCompareTo( zonedDataEndTimeDT, shouldHaveEmittedAt ) == 0 &&
+				InexactCompareTo( shouldHaveEmittedAt, zonedWorkingBarTimeDT ) > 0 ) {
+
+				// Set the EndTime accordingly
+				var workingTradeBar = _workingBar as QuoteBar;
+				workingTradeBar.EndTime = shouldHaveEmittedAt.WithZone( ExchangeTimeZone ).ToDateTimeUnspecified();
+
+				// Fire consolidation event
+				OnDataConsolidated( _workingBar );
+
+				// Last emission was when this bar ended
+				_lastEmit = _workingBar.EndTime;
+
+				// Reset the working bar
+				_workingBar = null;
 			}
 
 		}
