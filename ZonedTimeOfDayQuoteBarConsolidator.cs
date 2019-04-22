@@ -40,7 +40,7 @@ namespace QuantConnect.Data.Consolidators
 				workingBar = new QuoteBar
 				{
 					Symbol = data.Symbol,
-					Time = RoundDownToLastEmitTime( zonedDataTimeDT ).ToDateTimeUnspecified(),
+					Time = RoundDownToLastEmitTime( zonedDataTimeDT ).WithZone( ExchangeTimeZone ).ToDateTimeUnspecified(),
 					Bid = bid == null ? null : bid.Clone(),
 					Ask = ask == null ? null : ask.Clone(),
 					Period = TimeSpan.FromDays( 1 )
